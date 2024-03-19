@@ -96,7 +96,10 @@ uint32_t icp_write_flash(uint32_t addr, uint32_t len, uint8_t *data);
 void icp_mass_erase(void);
 void icp_page_erase(uint32_t addr);
 void icp_outputf(const char *fmt, ...);
-
+void _icp_bitsend(uint32_t data, int len, uint32_t udelay);
+void _icp_send_command(uint8_t cmd, uint32_t dat);
+void _icp_write_byte(uint8_t data, uint8_t end, uint32_t delay1, uint32_t delay2);
+uint8_t _icp_read_byte(int end);
 // disabled for microcontroller targets to avoid storing a large number of strings in flash
 #ifdef PRINT_CONFIG_EN
 void print_config(config_flags flags);

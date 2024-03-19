@@ -116,6 +116,30 @@ class NuvoICP:
             # pgm may still be initialized, this is reentrant
             self.pgm.deinit(self.deinit_reset_high)
 
+    def _arbirary_read_cmd(self, cmd:int, data:int, size:int) -> bytes:
+        """
+        Send an arbitrary read command to the ICP module
+        ------
+
+        #### Args:
+            cmd (int): 
+                The command to send
+            data (int): 
+                The data to send
+            size (int): 
+                The size of the data
+
+        #### Returns:
+            int:
+                The result of the command
+        """
+        rdata = []
+        self.icp._send_command(cmd, data)
+        for i in range(size-1):
+            rdata.append(self.icp._read_byte(0))
+        rdata.append(self.icp._read_byte(1))
+        return rdata
+
     def print_vb(self, *args, **kwargs):
         """
         Print a message if print progress is enabled

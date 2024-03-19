@@ -57,7 +57,7 @@ static unsigned long usend_time = 0;
 
 
 
-static void icp_bitsend(uint32_t data, int len, uint32_t udelay)
+void _icp_bitsend(uint32_t data, int len, uint32_t udelay)
 {
 	pgm_dat_dir(1);
 	int i = len;
@@ -70,9 +70,9 @@ static void icp_bitsend(uint32_t data, int len, uint32_t udelay)
 	}	
 }
 
-static void icp_send_command(uint8_t cmd, uint32_t dat)
+void _icp_send_command(uint8_t cmd, uint32_t dat)
 {
-	icp_bitsend((dat << 6) | cmd, 24, DEFAULT_BIT_DELAY);
+	_icp_bitsend((dat << 6) | cmd, 24, DEFAULT_BIT_DELAY);
 }
 
 int send_reset_seq(uint32_t reset_seq, int len){
@@ -84,11 +84,11 @@ int send_reset_seq(uint32_t reset_seq, int len){
 }
 
 void icp_send_entry_bits() {
-	icp_bitsend(ENTRY_BITS, 24, ENTRY_BIT_DELAY);
+	_icp_bitsend(ENTRY_BITS, 24, ENTRY_BIT_DELAY);
 }
 
 void icp_send_exit_bits(){
-	icp_bitsend(EXIT_BITS, 24, ENTRY_BIT_DELAY);
+	_icp_bitsend(EXIT_BITS, 24, ENTRY_BIT_DELAY);
 }
 
 int icp_init(uint8_t do_reset)
@@ -198,7 +198,7 @@ void icp_exit(void)
 }
 
 
-static uint8_t icp_read_byte(int end)
+uint8_t _icp_read_byte(int end)
 {
 	pgm_dat_dir(0);
 	USLEEP(DEFAULT_BIT_DELAY);
@@ -227,9 +227,9 @@ static uint8_t icp_read_byte(int end)
 	return data;
 }
 
-static void icp_write_byte(uint8_t data, uint8_t end, uint32_t delay1, uint32_t delay2)
+void _icp_write_byte(uint8_t data, uint8_t end, uint32_t delay1, uint32_t delay2)
 {
-	icp_bitsend(data, 8, DEFAULT_BIT_DELAY);
+	_icp_bitsend(data, 8, DEFAULT_BIT_DELAY);
 
 	pgm_set_dat(end);
 	USLEEP(delay1);
@@ -241,40 +241,40 @@ static void icp_write_byte(uint8_t data, uint8_t end, uint32_t delay1, uint32_t 
 
 uint32_t icp_read_device_id(void)
 {
-	icp_send_command(CMD_READ_DEVICE_ID, 0);
+	_icp_send_command(CMD_READ_DEVICE_ID, 0);
 
 	uint8_t devid[2];
-	devid[0] = icp_read_byte(0);
-	devid[1] = icp_read_byte(1);
+	devid[0] = _icp_read_byte(0);
+	devid[1] = _icp_read_byte(1);
 
 	return (devid[1] << 8) | devid[0];
 }
 
 uint32_t icp_read_pid(void){
-	icp_send_command(CMD_READ_DEVICE_ID, 2);
+	_icp_send_command(CMD_READ_DEVICE_ID, 2);
 	uint8_t pid[2];
-	pid[0] = icp_read_byte(0);
-	pid[1] = icp_read_byte(1);
+	pid[0] = _icp_read_byte(0);
+	pid[1] = _icp_read_byte(1);
 	return (pid[1] << 8) | pid[0];
 }
 
 uint8_t icp_read_cid(void)
 {
-	icp_send_command(CMD_READ_CID, 0);
-	return icp_read_byte(1);
+	_icp_send_command(CMD_READ_CID, 0);
+	return _icp_read_byte(1);
 }
 
 void icp_read_uid(uint8_t * buf)
 {
 
 	for (uint8_t  i = 0; i < 12; i++) {
-		icp_send_command(CMD_READ_UID, i);
-		buf[i] = icp_read_byte(1);
+		_icp_send_command(CMD_READ_UID, i);
+		buf[i] = _icp_read_byte(1);
 	}
 	// __uint128_t ret = 0;
 	// for (uint8_t  i = 0; i < 12; i++) {
-	// 	icp_send_command(CMD_READ_UID, i);
-	// 	ret |= (icp_read_byte(1) << (i * 8));
+	// 	_icp_send_command(CMD_READ_UID, i);
+	// 	ret |= (_icp_read_byte(1) << (i * 8));
 	// }
 	// return ret;
 }
@@ -282,14 +282,14 @@ void icp_read_uid(uint8_t * buf)
 void icp_read_ucid(uint8_t * buf)
 {
 	for (uint8_t i = 0; i < 16; i++) {
-		icp_send_command(CMD_READ_UID, i + 0x20);
-		buf[i] = icp_read_byte(1);
+		_icp_send_command(CMD_READ_UID, i + 0x20);
+		buf[i] = _icp_read_byte(1);
 	}
 
 	// __uint128_t ret = 0;
 	// for (uint8_t i = 0; i < 16; i++) {
-	// 	icp_send_command(CMD_READ_UID, i + 0x20);
-	// 	ret |= (icp_read_byte(1) << (i * 8));
+	// 	_icp_send_command(CMD_READ_UID, i + 0x20);
+	// 	ret |= (_icp_read_byte(1) << (i * 8));
 	// }
 	// return ret;
 }
@@ -299,10 +299,10 @@ uint32_t icp_read_flash(uint32_t addr, uint32_t len, uint8_t *data)
 	if (len == 0) {
 		return 0;
 	}
-	icp_send_command(CMD_READ_FLASH, addr);
+	_icp_send_command(CMD_READ_FLASH, addr);
 
 	for (uint32_t i = 0; i < len; i++){
-		data[i] = icp_read_byte(i == (len-1));
+		data[i] = _icp_read_byte(i == (len-1));
 	}
 	return addr + len;
 }
@@ -312,10 +312,10 @@ uint32_t icp_write_flash(uint32_t addr, uint32_t len, uint8_t *data)
 	if (len == 0) {
 		return 0;
 	}
-	icp_send_command(CMD_WRITE_FLASH, addr);
+	_icp_send_command(CMD_WRITE_FLASH, addr);
 	int delay1 = program_time;
 	for (uint32_t i = 0; i < len; i++) {
-		icp_write_byte(data[i], i == (len-1), delay1, 5);
+		_icp_write_byte(data[i], i == (len-1), delay1, 5);
 	}
 		
 	return addr + len;
@@ -323,14 +323,14 @@ uint32_t icp_write_flash(uint32_t addr, uint32_t len, uint8_t *data)
 
 void icp_mass_erase(void)
 {
-	icp_send_command(CMD_MASS_ERASE, 0x3A5A5);
-	icp_write_byte(0xff, 1, 50000, 500);
+	_icp_send_command(CMD_MASS_ERASE, 0x3A5A5);
+	_icp_write_byte(0xff, 1, 50000, 500);
 }
 
 void icp_page_erase(uint32_t addr)
 {
-	icp_send_command(CMD_PAGE_ERASE, addr);
-	icp_write_byte(0xff, 1, page_erase_time, 100);
+	_icp_send_command(CMD_PAGE_ERASE, addr);
+	_icp_write_byte(0xff, 1, page_erase_time, 100);
 }
 
 void icp_outputf(const char *s, ...)

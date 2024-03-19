@@ -12,11 +12,11 @@ typedef struct _config_flags {
 	uint8_t CBS:1;         // 0:7   | CONFIG boot select              -- 1: MCU will reboot from APROM after resets except software reset, 0: MCU will reboot from LDROM after resets except software reset
 	// config1
 	/** 1:3-0 | LDROM size select 
-	  111 - No LDROM, APROM is 18k.
-	  110 = LDROM is 1K Bytes. APROM is 17K Bytes.
-	  101 = LDROM is 2K Bytes. APROM is 16K Bytes. 
-	  100 = LDROM is 3K Bytes. APROM is 15K Bytes. 
-	  0xx = LDROM is 4K Bytes. APROM is 14K Bytes
+	  111 (7)  = No LDROM, APROM is 18k.
+	  110 (6)  = LDROM is 1K Bytes. APROM is 17K Bytes.
+	  101 (5)  = LDROM is 2K Bytes. APROM is 16K Bytes. 
+	  100 (4)  = LDROM is 3K Bytes. APROM is 15K Bytes. 
+	  0xx (>=3)= LDROM is 4K Bytes. APROM is 14K Bytes
 	*/
 	uint8_t LDS:3;
 	uint8_t unk1_3:5;      // 1:5-3

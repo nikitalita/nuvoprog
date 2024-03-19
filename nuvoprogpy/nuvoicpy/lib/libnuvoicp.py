@@ -31,8 +31,10 @@ class LibICP:
         self.libname = libname
         if libname.lower() == "pigpio":
             self.lib = ctypes.CDLL(dir_path + "/libnuvoicp-pigpio.so")
+            self.default_bit_delay = 2
         elif libname.lower() == "gpiod":
             self.lib = ctypes.CDLL(dir_path + "/libnuvoicp-gpiod.so")
+            self.default_bit_delay = 1
         else:
             raise ValueError(
                 "Unknown lib: %s\nMust be either 'pigpio' or 'gpiod'" % libname)
@@ -96,6 +98,23 @@ class LibICP:
 
         self.lib.icp_page_erase.argtypes = [ctypes.c_uint32]
         self.lib.icp_page_erase.restype = None
+
+        # void _icp_bitsend(uint32_t data, int len, uint32_t udelay);
+        # void _icp_send_command(uint8_t cmd, uint32_t dat);
+        # void _icp_write_byte(uint8_t data, uint8_t end, uint32_t delay1, uint32_t delay2);
+        # uint8_t _icp_read_byte(int end);
+        self.lib._icp_bitsend.argtypes = [ctypes.c_uint32, ctypes.c_int, ctypes.c_uint32]
+        self.lib._icp_bitsend.restype = None
+
+        self.lib._icp_send_command.argtypes = [ctypes.c_uint8, ctypes.c_uint32]
+        self.lib._icp_send_command.restype = None
+
+        self.lib._icp_write_byte.argtypes = [ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint32, ctypes.c_uint32]
+        self.lib._icp_write_byte.restype = None
+
+        self.lib._icp_read_byte.argtypes = [ctypes.c_int]
+        self.lib._icp_read_byte.restype = ctypes.c_uint8
+
 
         # Wrapper functions
 
@@ -180,6 +199,27 @@ class LibICP:
 
     def page_erase(self, addr):
         self.lib.icp_page_erase(ctypes.c_uint32(addr))
+
+    # use these with care
+    def _write_byte(self, data, end, delay1=None, delay2=None):
+        if delay1 is None:
+            delay1 = self.default_bit_delay
+        if delay2 is None:
+            delay2 = 5
+        self.lib._icp_write_byte(ctypes.c_uint8(data), ctypes.c_uint8(
+            end), ctypes.c_uint32(delay1), ctypes.c_uint32(delay2))
+    
+    # end means "stop reading this sequence after this byte is read"
+    def _read_byte(self, end):
+        return int(self.lib._icp_read_byte(ctypes.c_int(end)))
+    
+    def _send_command(self, cmd, dat):
+        self.lib._icp_send_command(ctypes.c_uint8(cmd), ctypes.c_uint32(dat))
+
+    def _bitsend(self, data, length, udelay=None):
+        if udelay is None:
+            udelay = self.default_bit_delay
+        self.lib._icp_bitsend(ctypes.c_uint32(data), ctypes.c_int(length), ctypes.c_uint32(udelay))
 
 class LibPGM:
     def __init__(self, libname="gpiod"):
